@@ -20,9 +20,12 @@ builder.Services.AddCors(options =>
 });
 
 // EF Core / SQLite
+var conn = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=Data/rental.db";
+var dbDir = Path.GetDirectoryName(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(conn).DataSource);
+if (!string.IsNullOrEmpty(dbDir)) Directory.CreateDirectory(dbDir);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=Data/rental.db";
     options.UseSqlite(conn);
 });
 
