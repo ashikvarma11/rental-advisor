@@ -1,4 +1,4 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, effect, input, output } from '@angular/core';
 import gsap from 'gsap';
 
 @Component({
@@ -8,14 +8,37 @@ import gsap from 'gsap';
   styleUrl: './wake-loader.component.sass'
 })
 export class WakeLoaderComponent implements AfterViewInit {
-  letters = ['R', 'E', 'N', 'T'];
+
+  asleep = input(true);
+  done = output<void>();
+
+  private sleepTl?: gsap.core.Timeline;
+
+  constructor() {
+    effect(() => {
+      if (!this.asleep()) this.wakeUp();
+    });
+  }
 
   ngAfterViewInit() {
-    gsap.to('.wake-key', {
-      y: -14,
-      duration: 0.45,
-      ease: 'power2.out',
-      stagger: { each: 0.09, repeat: -1, yoyo: true }
-    });
+    this.sleepTl = gsap.timeline({ repeat: -1 })
+      .to('.torso-group', { y: -3, duration: 1.6, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0)
+      .to('.z1', { opacity: 1, y: -8, duration: 1, ease: 'power1.out' }, 0)
+      .to('.z2', { opacity: 1, y: -8, duration: 1, ease: 'power1.out' }, 0.3)
+      .to('.z3', { opacity: 1, y: -8, duration: 1, ease: 'power1.out' }, 0.6)
+      .to('.z1, .z2, .z3', { opacity: 0, duration: 0.4 }, 1.6);
+  }
+
+  private wakeUp() {
+    this.sleepTl?.kill();
+
+    const tl = gsap.timeline({ onComplete: () => this.done.emit() });
+    tl.to('.z1, .z2, .z3', { opacity: 0, duration: 0.2 })
+      .to('.eye-left, .eye-right', { scaleY: 2, duration: 0.3, ease: 'back.out(2)' }, '<')
+      .to('.torso-group', { y: -18, duration: 0.5, ease: 'back.out(1.5)' }, '<')
+      .to('.arm-left', { rotate: -35, duration: 0.4, ease: 'power2.out' }, '<')
+      .to('.arm-right', { rotate: 35, duration: 0.4, ease: 'power2.out' }, '<')
+      .to('.mouth', { scaleY: 1.6, duration: 0.3, ease: 'power2.out' }, '<0.1')
+      .to('.wake-screen', { opacity: 0, duration: 0.4, ease: 'power1.in' }, '+=0.5');
   }
 }

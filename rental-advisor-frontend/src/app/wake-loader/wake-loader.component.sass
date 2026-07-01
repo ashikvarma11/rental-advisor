@@ -14,24 +14,38 @@
 	padding: 32px
 	text-align: center
 
-.wake-keys
-	display: flex
-	gap: 10px
+.sleeper
+	width: 220px
+	height: auto
+	overflow: visible
 
-.wake-key
-	display: flex
-	align-items: center
-	justify-content: center
-	width: 44px
-	height: 44px
-	border-radius: 10px
-	border: 1px solid var(--line)
-	background: #fff
+.bed-shadow
+	fill: rgba(16, 19, 15, 0.08)
+
+.blanket
+	fill: var(--accent)
+	opacity: 0.85
+
+.head
+	fill: #ffd9b8
+
+.eye, .mouth
+	fill: none
+	stroke: var(--ink)
+	stroke-width: 2.5
+	transform-origin: center
+
+.arm
+	fill: none
+	stroke: #ffd9b8
+	stroke-width: 10
+	transform-origin: center
+
+.z
 	font-family: var(--font-display)
 	font-weight: 700
-	font-size: 1.1rem
-	color: var(--accent)
-	box-shadow: 0 6px 16px rgba(16, 19, 15, 0.08)
+	fill: var(--muted)
+	opacity: 0
 
 .wake-title
 	font-family: var(--font-display)

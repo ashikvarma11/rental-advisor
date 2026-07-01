@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import gsap from 'gsap';
 import { WakeService } from './services/wake.service';
@@ -12,6 +12,7 @@ import { WakeLoaderComponent } from './wake-loader/wake-loader.component';
 })
 export class App {
   wake = inject(WakeService);
+  showLoader = signal(!this.wake.ready());
 
   constructor() {
     this.wake.ping();

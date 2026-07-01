@@ -30,6 +30,132 @@
 	color: var(--muted)
 	font-size: 0.9rem
 
+.dashboard
+	display: grid
+	grid-template-columns: repeat(4, 1fr) 1.4fr
+	gap: 16px
+	margin-bottom: 32px
+
+	@media (max-width: 860px)
+		grid-template-columns: repeat(2, 1fr)
+
+.stat-tile
+	background: #fff
+	border: 1px solid var(--line)
+	border-radius: var(--radius)
+	padding: 22px
+	display: flex
+	flex-direction: column
+	gap: 6px
+	justify-content: center
+	transition: border-color 0.2s ease, transform 0.2s ease
+
+	&.clickable
+		cursor: pointer
+
+		&:hover
+			border-color: var(--accent)
+			transform: translateY(-2px)
+
+	&.active
+		border-color: var(--accent)
+		box-shadow: 0 0 0 2px var(--accent-soft)
+
+.filter-hint
+	margin-top: -20px
+	margin-bottom: 24px
+
+	a
+		color: var(--accent)
+		cursor: pointer
+		text-decoration: underline
+
+.stat-value
+	font-family: var(--font-display)
+	font-size: 2rem
+	font-weight: 700
+	color: var(--ink)
+
+.stat-label
+	font-size: 0.78rem
+	color: var(--muted)
+	text-transform: uppercase
+	letter-spacing: 0.06em
+
+.donut-tile
+	flex-direction: row
+	align-items: center
+	gap: 20px
+	grid-column: span 1
+
+	@media (max-width: 860px)
+		grid-column: span 2
+
+.donut
+	width: 80px
+	height: 80px
+	flex-shrink: 0
+
+.donut-track
+	fill: none
+	stroke: var(--paper-dim)
+	stroke-width: 12
+
+.donut-seg
+	fill: none
+	stroke-width: 12
+	stroke-linecap: butt
+
+.seg-high
+	stroke: var(--accent)
+
+.seg-med
+	stroke: #ffad1f
+
+.seg-low
+	stroke: var(--sage)
+
+.donut-legend
+	display: flex
+	flex-direction: column
+	gap: 6px
+	font-size: 0.8rem
+	color: var(--ink)
+
+.legend-item
+	display: flex
+	align-items: center
+	gap: 8px
+
+	&.clickable
+		cursor: pointer
+		border-radius: 6px
+		padding: 2px 4px
+		margin: -2px -4px
+		transition: background 0.2s ease
+
+		&:hover
+			background: var(--paper-dim)
+
+	&.active
+		background: var(--accent-soft)
+		font-weight: 700
+
+.dot
+	width: 8px
+	height: 8px
+	border-radius: 50%
+	display: inline-block
+
+.dot-high
+	background: var(--accent)
+
+.dot-med
+	background: #ffad1f
+
+.dot-low
+	background: var(--sage)
+
 .clause-list
 	display: flex
 	flex-direction: column

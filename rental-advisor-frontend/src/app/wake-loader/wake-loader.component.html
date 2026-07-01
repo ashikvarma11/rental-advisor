@@ -1,9 +1,24 @@
 <div class="wake-screen">
-  <div class="wake-keys">
-    @for (l of letters; track l) {
-      <span class="wake-key">{{ l }}</span>
-    }
-  </div>
-  <p class="wake-title">Waking up the server</p>
+  <svg class="sleeper" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse class="bed-shadow" cx="120" cy="178" rx="90" ry="10" />
+    <g class="zzz">
+      <text x="150" y="55" class="z z1">Z</text>
+      <text x="165" y="40" class="z z2">Z</text>
+      <text x="180" y="26" class="z z3">Z</text>
+    </g>
+    <g class="body-group">
+      <rect class="blanket" x="40" y="120" width="140" height="40" rx="20" />
+      <g class="torso-group">
+        <circle class="head" cx="85" cy="110" r="26" />
+        <path class="arm arm-left" d="M65 128 Q40 132 34 150" stroke-linecap="round" />
+        <path class="arm arm-right" d="M105 128 Q130 132 140 148" stroke-linecap="round" />
+        <path class="eye eye-left" d="M74 106 q6 -4 12 0" stroke-linecap="round" />
+        <path class="eye eye-right" d="M92 106 q6 -4 12 0" stroke-linecap="round" />
+        <path class="mouth" d="M80 122 q6 3 12 0" stroke-linecap="round" />
+      </g>
+    </g>
+  </svg>
+
+  <p class="wake-title">{{ asleep() ? 'Waking up the server' : 'All set!' }}</p>
   <p class="wake-copy">Free hosting naps after a few idle minutes — it's stretching now, back in a moment.</p>
 </div>
