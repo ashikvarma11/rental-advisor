@@ -3,12 +3,8 @@
     <div class="compare-form">
       <div class="eyebrow">Rent comparator</div>
       <h1>How does this listing stack up?</h1>
-      <p>Enter a suburb and postcode to compare average listed rent against the ABS median.</p>
+      <p>Enter a postcode to compare average listed rent against the ABS median.</p>
 
-      <div class="field">
-        <label for="suburb">Suburb</label>
-        <input id="suburb" [(ngModel)]="suburb" (keyup.enter)="compare()" placeholder="e.g. Surry Hills">
-      </div>
       <div class="field">
         <label for="postcode">Postcode</label>
         <input id="postcode" [(ngModel)]="postcode" (keyup.enter)="compare()" placeholder="e.g. 2010">
@@ -25,7 +21,7 @@
       @if (result(); as result) {
         <div class="card result-panel" #panel>
           <div class="result-header">
-            <h2>{{ result.suburb }} <span class="muted">{{ result.postcode }}</span></h2>
+            <h2>Postcode <span class="muted">{{ result.postcode }}</span></h2>
             @if (result.differencePercent != null) {
               <span class="badge" [class]="diffClass(result.differencePercent)">
                 {{ result.differencePercent > 0 ? '+' : '' }}{{ result.differencePercent }}% vs median
@@ -35,7 +31,7 @@
 
           <div class="bar-row">
             <div class="bar-label">
-              <span>Suburb median</span>
+              <span>Postcode median</span>
               <strong>{{ result.median != null ? ('$' + result.median) : '—' }}</strong>
             </div>
             <div class="bar-track">

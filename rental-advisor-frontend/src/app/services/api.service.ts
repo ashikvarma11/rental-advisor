@@ -8,8 +8,8 @@ export class ApiService {
   private base = environment.apiUrl;
   constructor(private http: HttpClient) {}
 
-  compareSuburb(suburb: string, postcode: string) {
-    const params = new HttpParams().set('suburb', suburb).set('postcode', postcode);
+  compareSuburb(postcode: string) {
+    const params = new HttpParams().set('postcode', postcode);
     return firstValueFrom(this.http.get(`${this.base}/api/compare/suburb`, { params }));
   }
 

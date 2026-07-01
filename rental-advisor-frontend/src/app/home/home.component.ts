@@ -16,7 +16,7 @@ export class HomeComponent implements AfterViewInit {
     {
       tag: '01',
       title: 'Compare suburb rents',
-      copy: 'Benchmark any listing against ABS median rent data for its suburb and postcode, instantly.',
+      copy: 'Benchmark any listing against ABS median rent data for its postcode, instantly.',
       link: '/compare',
       cta: 'Open comparator'
     },

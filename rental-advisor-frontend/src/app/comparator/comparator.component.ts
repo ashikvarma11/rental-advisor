@@ -5,7 +5,6 @@ import { ApiService } from '../services/api.service';
 import gsap from 'gsap';
 
 interface CompareResult {
-  suburb: string;
   postcode: string;
   median: number | null;
   averageListingRent: number | null;
@@ -23,7 +22,6 @@ interface CompareResult {
 export class ComparatorComponent {
   panel = viewChild<ElementRef<HTMLElement>>('panel');
 
-  suburb = 'Surry Hills';
   postcode = '2010';
   result = signal<CompareResult | null>(null);
   loading = signal(false);
@@ -35,7 +33,7 @@ export class ComparatorComponent {
     this.loading.set(true);
     this.error.set(undefined);
     try {
-      const result = await this.api.compareSuburb(this.suburb, this.postcode) as CompareResult;
+      const result = await this.api.compareSuburb(this.postcode) as CompareResult;
       this.result.set(result);
       queueMicrotask(() => this.animateResult());
     } catch (e: any) {

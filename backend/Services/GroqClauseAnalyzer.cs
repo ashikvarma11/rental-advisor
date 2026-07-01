@@ -5,6 +5,7 @@ namespace RentalAdvisor.Backend.Services;
 
 public record ClauseAnalysis(decimal RiskScore, string? Suggestion);
 public record ExtractedClause(string Text, decimal RiskScore, string? Suggestion);
+public record LeaseSummary(decimal? Rent, string? Suburb, string? Postcode);
 
 // Calls Groq's OpenAI-compatible chat completions API (free tier) to score lease clause risk.
 // Returns null when no API key is configured or the call fails, so callers can fall back to rule-based scoring.
@@ -175,6 +176,80 @@ public class GroqClauseAnalyzer
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Groq clause extraction failed; falling back to regex-based splitting");
+            return null;
+        }
+    }
+
+    // Pulls weekly/monthly rent, suburb and postcode out of the raw lease text so extracted leases can feed the comparator's Listings table.
+    public async Task<LeaseSummary?> ExtractLeaseSummaryAsync(string documentText, CancellationToken ct = default)
+    {
+        var apiKey = _config["Groq:ApiKey"];
+        if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(documentText)) return null;
+
+        var model = _config["Groq:Model"] ?? "llama-3.3-70b-versatile";
+
+        var systemPrompt = "You are an information extractor for Australian residential lease documents. " +
+            "From the raw lease text, find the rent property's suburb, 4-digit postcode, and rent amount converted to AUD per week. " +
+            "Respond with ONLY a JSON object: {\"rent\": <weekly rent number or null>, \"suburb\": \"<suburb or null>\", \"postcode\": \"<4-digit postcode or null>\"}. " +
+            "Use null for any field you cannot find with confidence. Convert monthly/fortnightly rent to a weekly figure.";
+
+        var payload = new
+        {
+            model,
+            messages = new object[]
+            {
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = documentText }
+            },
+            temperature = 0.1,
+            max_tokens = 200
+        };
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions")
+            {
+                Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+            };
+
+            var response = await client.SendAsync(request, ct);
+            response.EnsureSuccessStatusCode();
+            var body = await response.Content.ReadAsStringAsync(ct);
+
+            using var doc = JsonDocument.Parse(body);
+            var content = doc.RootElement
+                .GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString();
+
+            if (string.IsNullOrEmpty(content)) return null;
+
+            var jsonStart = content.IndexOf('{');
+            var jsonEnd = content.LastIndexOf('}');
+            if (jsonStart < 0 || jsonEnd < jsonStart) return null;
+
+            using var resultDoc = JsonDocument.Parse(content.Substring(jsonStart, jsonEnd - jsonStart + 1));
+            var root = resultDoc.RootElement;
+
+            decimal? rent = root.TryGetProperty("rent", out var rentEl) && rentEl.ValueKind == JsonValueKind.Number
+                ? rentEl.GetDecimal()
+                : null;
+            var suburb = root.TryGetProperty("suburb", out var suburbEl) && suburbEl.ValueKind == JsonValueKind.String
+                ? suburbEl.GetString()?.Trim()
+                : null;
+            var postcode = root.TryGetProperty("postcode", out var postcodeEl) && postcodeEl.ValueKind == JsonValueKind.String
+                ? postcodeEl.GetString()?.Trim()
+                : null;
+
+            return new LeaseSummary(rent, suburb, postcode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Groq lease summary extraction failed");
             return null;
         }
     }

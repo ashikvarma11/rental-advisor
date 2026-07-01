@@ -16,17 +16,19 @@ public class ComparatorController : ControllerBase
     }
 
     [HttpGet("suburb")]
-    public async Task<IActionResult> CompareSuburb([FromQuery] string suburb, [FromQuery] string postcode)
+    public async Task<IActionResult> CompareSuburb([FromQuery] string postcode)
     {
-        if (string.IsNullOrWhiteSpace(suburb)) return BadRequest(new { error = "suburb required" });
+        if (string.IsNullOrWhiteSpace(postcode)) return BadRequest(new { error = "postcode required" });
 
-        var suburbLower = suburb.ToLowerInvariant();
-        var stats = await _db.SuburbStats
-            .Where(s => s.Suburb.ToLower() == suburbLower && (string.IsNullOrEmpty(postcode) || s.Postcode == postcode))
-            .OrderByDescending(s => s.Year)
-            .FirstOrDefaultAsync();
+        // A postcode can span multiple suburbs, so average the latest-year median across all of them.
+        var latestYearPerSuburb = await _db.SuburbStats
+            .Where(s => s.Postcode == postcode)
+            .GroupBy(s => s.Suburb)
+            .Select(g => g.OrderByDescending(s => s.Year).First())
+            .ToListAsync();
+        decimal? median = latestYearPerSuburb.Any() ? latestYearPerSuburb.Average(s => s.MedianRent) : (decimal?)null;
 
-        var listingsQuery = _db.Listings.Where(l => l.Suburb.ToLower() == suburbLower && (string.IsNullOrEmpty(postcode) || l.Postcode == postcode));
+        var listingsQuery = _db.Listings.Where(l => l.Postcode == postcode);
         var listingCount = await listingsQuery.CountAsync();
         decimal? avgRent = null;
         if (listingCount > 0)
@@ -35,15 +37,12 @@ public class ComparatorController : ControllerBase
             avgRent = rents.Any() ? rents.Average() : (decimal?)null;
         }
 
-        var median = stats?.MedianRent;
-
         decimal? diffPercent = null;
         if (median.HasValue && avgRent.HasValue && median.Value > 0)
             diffPercent = Math.Round((avgRent.Value - median.Value) / median.Value * 100, 2);
 
         return Ok(new
         {
-            suburb,
             postcode,
             median = median,
             averageListingRent = avgRent,

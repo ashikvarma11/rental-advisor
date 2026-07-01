@@ -152,6 +152,22 @@ public class LeasesController : ControllerBase
             }
         }
 
+        if (_aiAnalyzer.IsConfigured)
+        {
+            var summary = await _aiAnalyzer.ExtractLeaseSummaryAsync(content);
+            if (summary != null && summary.Rent > 0 && !string.IsNullOrWhiteSpace(summary.Suburb)
+                && !string.IsNullOrWhiteSpace(summary.Postcode) && System.Text.RegularExpressions.Regex.IsMatch(summary.Postcode, "^\\d{4}$"))
+            {
+                _db.Listings.Add(new Listing
+                {
+                    Title = $"Lease upload: {doc.FileName}",
+                    Suburb = summary.Suburb!,
+                    Postcode = summary.Postcode!,
+                    Rent = summary.Rent.Value
+                });
+            }
+        }
+
         await _db.SaveChangesAsync();
         return Ok(new { created });
     }
