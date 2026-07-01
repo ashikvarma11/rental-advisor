@@ -1,0 +1,74 @@
+:host
+	display: block
+	min-height: 100dvh
+
+.site-header
+	position: sticky
+	top: 0
+	z-index: 20
+	backdrop-filter: blur(10px)
+	background: rgba(246, 242, 233, 0.82)
+	border-bottom: 1px solid var(--line)
+
+.header-inner
+	display: flex
+	align-items: center
+	justify-content: space-between
+	padding: 20px 32px
+
+.logo
+	font-family: var(--font-display)
+	font-size: 1.15rem
+	font-weight: 700
+	text-decoration: none
+	color: var(--ink)
+
+	span
+		color: var(--accent)
+
+nav
+	display: flex
+	gap: 28px
+
+	a
+		text-decoration: none
+		font-size: 0.9rem
+		font-weight: 600
+		color: var(--muted)
+		transition: color 0.2s ease
+		position: relative
+
+		&:hover
+			color: var(--ink)
+
+		&.active
+			color: var(--ink)
+
+			&::after
+				content: ''
+				position: absolute
+				left: 0
+				right: 0
+				bottom: -6px
+				height: 2px
+				background: var(--accent)
+				border-radius: 2px
+
+.site-main
+	min-height: 60dvh
+
+.site-footer
+	border-top: 1px solid var(--line)
+	padding: 28px 0
+	margin-top: 64px
+
+.footer-inner
+	display: flex
+	justify-content: space-between
+	flex-wrap: wrap
+	gap: 8px
+	font-size: 0.82rem
+	color: var(--muted)
+
+.footer-dim
+	opacity: 0.7

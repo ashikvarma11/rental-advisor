@@ -1,0 +1,96 @@
+:host
+	display: block
+
+.compare-page
+	padding-top: 64px
+
+.compare-grid
+	display: grid
+	grid-template-columns: minmax(280px, 380px) 1fr
+	gap: 48px
+	align-items: start
+
+.compare-form
+	h1
+		font-size: clamp(1.8rem, 3vw, 2.4rem)
+		margin: 0 0 12px
+
+	p
+		margin-bottom: 28px
+
+	.field
+		margin-bottom: 18px
+
+	.btn
+		width: 100%
+		margin-top: 8px
+
+.error-text
+	color: var(--accent)
+	font-size: 0.85rem
+	margin-top: 12px
+
+.empty-panel
+	display: flex
+	align-items: center
+	justify-content: center
+	min-height: 260px
+	text-align: center
+	border-style: dashed
+
+.result-panel
+	padding: 36px
+
+.result-header
+	display: flex
+	align-items: center
+	justify-content: space-between
+	flex-wrap: wrap
+	gap: 12px
+	margin-bottom: 32px
+
+	h2
+		font-size: 1.5rem
+
+	.muted
+		color: var(--muted)
+		font-weight: 400
+		font-size: 1rem
+
+.bar-row
+	margin-bottom: 24px
+
+.bar-label
+	display: flex
+	justify-content: space-between
+	font-size: 0.88rem
+	margin-bottom: 8px
+	color: var(--muted)
+
+	strong
+		color: var(--ink)
+		font-family: var(--font-display)
+
+.bar-track
+	height: 10px
+	border-radius: 100px
+	background: var(--paper-dim)
+	overflow: hidden
+
+.bar-fill
+	height: 100%
+	border-radius: 100px
+
+	&.median
+		background: var(--ink)
+
+	&.listing
+		background: var(--accent)
+
+.result-footnote
+	font-size: 0.82rem
+	margin-top: 8px
+
+@media (max-width: 860px)
+	.compare-grid
+		grid-template-columns: 1fr

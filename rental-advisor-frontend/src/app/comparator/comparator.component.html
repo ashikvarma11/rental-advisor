@@ -1,0 +1,65 @@
+<section class="section compare-page">
+  <div class="container compare-grid">
+    <div class="compare-form">
+      <div class="eyebrow">Rent comparator</div>
+      <h1>How does this listing stack up?</h1>
+      <p>Enter a suburb and postcode to compare average listed rent against the ABS median.</p>
+
+      <div class="field">
+        <label for="suburb">Suburb</label>
+        <input id="suburb" [(ngModel)]="suburb" (keyup.enter)="compare()" placeholder="e.g. Surry Hills">
+      </div>
+      <div class="field">
+        <label for="postcode">Postcode</label>
+        <input id="postcode" [(ngModel)]="postcode" (keyup.enter)="compare()" placeholder="e.g. 2010">
+      </div>
+      <button class="btn btn-primary" (click)="compare()" [disabled]="loading()">
+        {{ loading() ? 'Comparing…' : 'Compare rent' }}
+      </button>
+      @if (error()) {
+        <p class="error-text">{{ error() }}</p>
+      }
+    </div>
+
+    <div class="compare-result">
+      @if (result(); as result) {
+        <div class="card result-panel" #panel>
+          <div class="result-header">
+            <h2>{{ result.suburb }} <span class="muted">{{ result.postcode }}</span></h2>
+            @if (result.differencePercent != null) {
+              <span class="badge" [class]="diffClass(result.differencePercent)">
+                {{ result.differencePercent > 0 ? '+' : '' }}{{ result.differencePercent }}% vs median
+              </span>
+            }
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">
+              <span>Suburb median</span>
+              <strong>{{ result.median != null ? ('$' + result.median) : '—' }}</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill median" [attr.data-target]="barWidth(result.median, result.median || result.averageListingRent || 1)" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">
+              <span>Average listing rent</span>
+              <strong>{{ result.averageListingRent != null ? ('$' + (result.averageListingRent | number:'1.0-0')) : '—' }}</strong>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill listing" [attr.data-target]="barWidth(result.averageListingRent, result.median || result.averageListingRent || 1)" style="width:0%"></div>
+            </div>
+          </div>
+
+          <p class="result-footnote">Based on {{ result.listingCount }} tracked listing{{ result.listingCount === 1 ? '' : 's' }} in this area.</p>
+        </div>
+      } @else if (!loading()) {
+        <div class="card empty-panel">
+          <p>Results will appear here once you run a comparison.</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>

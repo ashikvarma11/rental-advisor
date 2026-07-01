@@ -1,0 +1,71 @@
+:host
+	display: block
+
+.upload-page
+	padding-top: 64px
+
+.upload-inner
+	max-width: 640px
+
+	h1
+		font-size: clamp(1.8rem, 3vw, 2.4rem)
+		margin: 0 0 12px
+
+	p
+		margin-bottom: 32px
+
+.drop-zone
+	display: flex
+	align-items: center
+	justify-content: center
+	min-height: 220px
+	border: 2px dashed var(--line)
+	border-radius: var(--radius)
+	background: #fff
+	cursor: pointer
+	transition: border-color 0.2s ease, background 0.2s ease
+	margin-bottom: 24px
+
+	&:hover
+		border-color: var(--accent)
+
+	&.dragging
+		border-color: var(--accent)
+		background: var(--accent-soft)
+
+	&.has-file
+		border-style: solid
+		border-color: var(--sage)
+
+.drop-copy
+	text-align: center
+
+.drop-title
+	display: block
+	font-family: var(--font-display)
+	font-size: 1.1rem
+	margin-bottom: 6px
+
+.drop-sub
+	display: block
+	font-size: 0.85rem
+	color: var(--muted)
+
+.file-chip
+	display: flex
+	flex-direction: column
+	align-items: center
+	gap: 4px
+
+.file-name
+	font-family: var(--font-display)
+	font-size: 1.05rem
+
+.file-size
+	font-size: 0.8rem
+	color: var(--muted)
+
+.error-text
+	color: var(--accent)
+	font-size: 0.85rem
+	margin-top: 16px

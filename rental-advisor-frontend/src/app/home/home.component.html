@@ -1,0 +1,44 @@
+<section class="hero" #hero>
+  <div class="container">
+    <div class="hero-eyebrow eyebrow">Rental market analyzer &amp; lease advisor</div>
+    <h1 class="hero-title">
+      <span>Know your</span> <span>rent.</span><br>
+      <span>Read your</span> <span class="accent">lease.</span>
+    </h1>
+    <p class="hero-copy">
+      Compare listings against real ABS suburb data, verify landlords via the ABR, and
+      let an AI-assisted reader flag the lease clauses worth a second look — before you sign.
+    </p>
+    <div class="hero-actions">
+      <a routerLink="/compare" class="btn btn-primary">Compare a suburb</a>
+      <a routerLink="/upload" class="btn btn-ghost">Upload a lease</a>
+    </div>
+  </div>
+</section>
+
+<section class="stats-band">
+  <div class="container stats-grid">
+    @for (s of stats; track s.label) {
+      <div class="stat">
+        <div class="stat-value">{{ s.value }}</div>
+        <div class="stat-label">{{ s.label }}</div>
+      </div>
+    }
+  </div>
+</section>
+
+<section class="section features">
+  <div class="container">
+    <h2 class="section-title">Three tools, one lease decision</h2>
+    <div class="feature-grid">
+      @for (f of features; track f.title) {
+        <a [routerLink]="f.link" class="feature-card">
+          <span class="feature-tag">{{ f.tag }}</span>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.copy }}</p>
+          <span class="feature-cta">{{ f.cta }} →</span>
+        </a>
+      }
+    </div>
+  </div>
+</section>

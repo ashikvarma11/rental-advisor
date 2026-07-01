@@ -1,0 +1,37 @@
+<section class="section clauses-page">
+  <div class="container">
+    <div class="clauses-header">
+      <div>
+        <div class="eyebrow">Lease clauses</div>
+        <h1>Flagged for your review</h1>
+      </div>
+      <div class="clauses-actions">
+        <button class="btn btn-primary" (click)="exportCsv()" [disabled]="!leaseId || !clauses().length">Export CSV</button>
+      </div>
+    </div>
+
+    @if (message()) {
+      <p class="status-text">{{ message() }}</p>
+    }
+
+    <div class="clause-list" #list>
+      @for (c of clauses(); track c.id) {
+        <div class="card clause-card" [class.resolved]="c.isResolved">
+          <div class="clause-top">
+            <span class="badge" [class]="riskClass(c.riskScore)">{{ riskLabel(c.riskScore) }}</span>
+            <span class="risk-score">{{ (c.riskScore * 100) | number:'1.0-0' }}%</span>
+          </div>
+          <p class="clause-text">{{ c.text }}</p>
+          @if (c.suggestion) {
+            <p class="clause-suggestion">💡 {{ c.suggestion }}</p>
+          }
+          <div class="clause-footer">
+            <button class="btn btn-ghost btn-sm" (click)="resolveClause(c)" [disabled]="c.isResolved">
+              {{ c.isResolved ? 'Resolved' : 'Mark resolved' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>

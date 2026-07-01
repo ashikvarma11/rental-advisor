@@ -1,0 +1,75 @@
+:host
+	display: block
+
+.clauses-page
+	padding-top: 64px
+
+.clauses-header
+	display: flex
+	justify-content: space-between
+	align-items: flex-end
+	flex-wrap: wrap
+	gap: 24px
+	margin-bottom: 32px
+
+	h1
+		font-size: clamp(1.8rem, 3vw, 2.4rem)
+
+.clauses-actions
+	display: flex
+	align-items: flex-end
+	gap: 12px
+	flex-wrap: wrap
+
+.btn-sm
+	padding: 8px 18px
+	font-size: 0.82rem
+
+.status-text
+	margin-bottom: 24px
+	color: var(--muted)
+	font-size: 0.9rem
+
+.clause-list
+	display: flex
+	flex-direction: column
+	gap: 16px
+
+.clause-card
+	transition: opacity 0.3s ease
+
+	&.resolved
+		opacity: 0.55
+
+		.clause-text
+			text-decoration: line-through
+
+.clause-top
+	display: flex
+	align-items: center
+	justify-content: space-between
+	margin-bottom: 14px
+
+.risk-score
+	font-family: var(--font-display)
+	font-size: 0.85rem
+	color: var(--muted)
+
+.clause-text
+	color: var(--ink)
+	white-space: pre-wrap
+	font-size: 0.95rem
+	line-height: 1.65
+
+.clause-suggestion
+	margin-top: 14px
+	padding: 12px 16px
+	background: var(--accent-soft)
+	border-radius: 10px
+	font-size: 0.88rem
+	color: var(--ink)
+
+.clause-footer
+	margin-top: 18px
+	display: flex
+	justify-content: flex-end

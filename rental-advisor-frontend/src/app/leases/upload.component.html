@@ -1,0 +1,37 @@
+<section class="section upload-page">
+  <div class="container upload-inner">
+    <div class="eyebrow">Lease upload</div>
+    <h1>Drop in your lease, we'll do the reading</h1>
+    <p>Accepts PDF or plain text. Your file is parsed for text and the original is deleted from the server.</p>
+
+    <label
+      #dropZone
+      class="drop-zone"
+      [class.dragging]="dragging()"
+      [class.has-file]="file()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)">
+      <input type="file" accept=".pdf,.txt" (change)="onFileChange($event)" hidden>
+      @if (file(); as f) {
+        <div class="file-chip">
+          <span class="file-name">{{ f.name }}</span>
+          <span class="file-size">{{ (f.size / 1024) | number:'1.0-0' }} KB</span>
+        </div>
+      } @else {
+        <div class="drop-copy">
+          <span class="drop-title">Drag &amp; drop your lease here</span>
+          <span class="drop-sub">or click to browse</span>
+        </div>
+      }
+    </label>
+
+    <button class="btn btn-primary" (click)="upload()" [disabled]="!file() || loading()">
+      {{ loading() ? 'Uploading & analyzing…' : 'Upload & extract clauses' }}
+    </button>
+
+    @if (error()) {
+      <p class="error-text">{{ error() }}</p>
+    }
+  </div>
+</section>

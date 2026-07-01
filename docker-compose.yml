@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ABR__ApiKey=${ABR_API_KEY}
+      - Groq__ApiKey=${GROQ_API_KEY}
+    volumes:
+      - dbdata:/app/Data
+    ports:
+      - "5000:80"
+
+  frontend:
+    build: ./rental-advisor-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  dbdata:

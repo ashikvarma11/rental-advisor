@@ -5,10 +5,18 @@ using RentalAdvisor.Backend.Models;
 
 namespace RentalAdvisor.Backend.Services;
 
+public class ListingImportResult
+{
+    public int Created { get; set; }
+    public List<string> Errors { get; set; } = new();
+}
+
 public class DataImporter
 {
     private readonly AppDbContext _db;
     private readonly IWebHostEnvironment _env;
+
+    private static readonly string[] RequiredListingHeaders = { "title", "suburb", "postcode", "rent" };
 
     public DataImporter(AppDbContext db, IWebHostEnvironment env)
     {
@@ -37,8 +45,8 @@ public class DataImporter
         foreach (var line in lines.Skip(1))
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
-            var parts = line.Split(',');
-            if (parts.Length < 4) continue;
+            var parts = CsvParser.ParseLine(line);
+            if (parts.Count < 4) continue;
             if (!decimal.TryParse(parts[2], NumberStyles.Any, CultureInfo.InvariantCulture, out var median)) continue;
             if (!int.TryParse(parts[3], out var year)) year = DateTime.UtcNow.Year;
             list.Add(new SuburbStats
@@ -60,55 +68,111 @@ public class DataImporter
     public async Task<int> ImportListingsFromCsvAsync(string relativePath)
     {
         // Accept absolute or relative paths. Try common fallbacks if not found.
-        if (Path.IsPathRooted(relativePath) && File.Exists(relativePath))
+        string? path = Path.IsPathRooted(relativePath) && File.Exists(relativePath) ? relativePath : null;
+
+        if (path == null)
         {
-            var linesRoot = await File.ReadAllLinesAsync(relativePath);
-            return await ImportLinesAsync(linesRoot);
+            var filename = Path.GetFileName(relativePath);
+            var candidates = new[]
+            {
+                Path.Combine(_env.ContentRootPath, relativePath),
+                Path.Combine(_env.ContentRootPath, relativePath.Replace("data/", "Data/")),
+                Path.Combine(_env.ContentRootPath, "Data", filename),
+                Path.Combine(_env.ContentRootPath, "..", "Data", filename)
+            };
+            path = candidates.FirstOrDefault(File.Exists);
         }
 
-        var filename = Path.GetFileName(relativePath);
-        var candidates = new[]
-        {
-            Path.Combine(_env.ContentRootPath, relativePath),
-            Path.Combine(_env.ContentRootPath, relativePath.Replace("data/", "Data/")),
-            Path.Combine(_env.ContentRootPath, "Data", filename),
-            Path.Combine(_env.ContentRootPath, "..", "Data", filename)
-        };
-
-        var path = candidates.FirstOrDefault(File.Exists);
         if (path == null)
             throw new FileNotFoundException($"Could not find '{relativePath}' in expected locations.");
 
         var lines = await File.ReadAllLinesAsync(path);
-        var created = 0;
-        return await ImportLinesAsync(lines);
+        var result = ImportListingLines(lines);
+        if (result.Created > 0)
+            await _db.SaveChangesAsync();
+        return result.Created;
     }
 
-    private async Task<int> ImportLinesAsync(string[] lines)
+    public async Task<ListingImportResult> ImportListingsFromStreamAsync(Stream stream)
     {
-        var created = 0;
-        foreach (var line in lines.Skip(1))
-        {
-            if (string.IsNullOrWhiteSpace(line)) continue;
-            var parts = line.Split(',');
-            if (parts.Length < 4) continue;
+        using var reader = new StreamReader(stream);
+        var content = await reader.ReadToEndAsync();
+        var lines = content.Split('\n').Select(l => l.TrimEnd('\r')).ToArray();
+        var result = ImportListingLines(lines);
+        if (result.Created > 0)
+            await _db.SaveChangesAsync();
+        return result;
+    }
 
-            if (!decimal.TryParse(parts[3], NumberStyles.Any, CultureInfo.InvariantCulture, out var rent)) continue;
+    private ListingImportResult ImportListingLines(string[] lines)
+    {
+        var result = new ListingImportResult();
+        if (lines.Length == 0)
+        {
+            result.Errors.Add("File is empty.");
+            return result;
+        }
+
+        var header = CsvParser.ParseLine(lines[0]).Select(h => h.Trim().ToLowerInvariant()).ToList();
+        var missingHeaders = RequiredListingHeaders.Where(h => !header.Contains(h)).ToList();
+        if (missingHeaders.Any())
+        {
+            result.Errors.Add($"Missing required column(s): {string.Join(", ", missingHeaders)}. Expected header: Title,Suburb,Postcode,Rent[,LandlordABN]");
+            return result;
+        }
+
+        var titleIdx = header.IndexOf("title");
+        var suburbIdx = header.IndexOf("suburb");
+        var postcodeIdx = header.IndexOf("postcode");
+        var rentIdx = header.IndexOf("rent");
+        var abnIdx = header.IndexOf("landlordabn");
+
+        for (var i = 1; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            var rowNum = i + 1;
+            var parts = CsvParser.ParseLine(line);
+            if (parts.Count < header.Count)
+            {
+                result.Errors.Add($"Row {rowNum}: expected {header.Count} columns, found {parts.Count}. Skipped.");
+                continue;
+            }
+
+            var suburb = parts[suburbIdx].Trim();
+            var postcode = parts[postcodeIdx].Trim();
+            var rentRaw = parts[rentIdx].Trim();
+
+            if (string.IsNullOrWhiteSpace(suburb))
+            {
+                result.Errors.Add($"Row {rowNum}: Suburb is required. Skipped.");
+                continue;
+            }
+            if (!System.Text.RegularExpressions.Regex.IsMatch(postcode, "^\\d{4}$"))
+            {
+                result.Errors.Add($"Row {rowNum}: Postcode '{postcode}' must be 4 digits. Skipped.");
+                continue;
+            }
+            if (!decimal.TryParse(rentRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out var rent) || rent <= 0)
+            {
+                result.Errors.Add($"Row {rowNum}: Rent '{rentRaw}' is not a valid positive number. Skipped.");
+                continue;
+            }
 
             var listing = new Listing
             {
-                Title = parts[0].Trim(),
-                Suburb = parts[1].Trim(),
-                Postcode = parts[2].Trim(),
+                Title = titleIdx >= 0 ? parts[titleIdx].Trim() : string.Empty,
+                Suburb = suburb,
+                Postcode = postcode,
                 Rent = rent,
-                LandlordAbn = parts.Length > 4 ? parts[4].Trim() : null
+                LandlordAbn = abnIdx >= 0 && abnIdx < parts.Count && !string.IsNullOrWhiteSpace(parts[abnIdx]) ? parts[abnIdx].Trim() : null
             };
 
             _db.Listings.Add(listing);
-            created++;
+            result.Created++;
         }
 
-        await _db.SaveChangesAsync();
-        return created;
+        return result;
     }
 }

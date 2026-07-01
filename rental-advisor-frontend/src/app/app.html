@@ -1,0 +1,21 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a routerLink="/home" class="logo">RentAdvisor<span>.</span></a>
+    <nav>
+      <a routerLink="/compare" routerLinkActive="active">Compare</a>
+      <a routerLink="/upload" routerLinkActive="active">Upload Lease</a>
+      <a routerLink="/clauses" routerLinkActive="active">Clauses</a>
+    </nav>
+  </div>
+</header>
+
+<main #outlet class="site-main">
+  <router-outlet (activate)="onActivate()" />
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>RentAdvisor — built for the Australian rental market</span>
+    <span class="footer-dim">Demo prototype · not financial or legal advice</span>
+  </div>
+</footer>

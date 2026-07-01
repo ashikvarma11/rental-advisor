@@ -1,0 +1,24 @@
+# Visual Studio / .NET
+bin/
+obj/
+.vs/
+*.user
+
+# Docker
+.env
+.dockerignore
+
+# Backend
+/backend/bin/
+/backend/obj/
+/backend/Data/*.db
+
+# Frontend
+/rental-advisor-frontend/node_modules/
+/rental-advisor-frontend/dist/
+/rental-advisor-frontend/.angular/
+
+# Misc
+*.db
+*.sqlite
+*.log
