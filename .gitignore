@@ -22,3 +22,7 @@ obj/
 *.db
 *.sqlite
 *.log
+
+# Local-only
+.claude/
+prd/
