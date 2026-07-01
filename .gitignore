@@ -20,6 +20,8 @@ obj/
 
 # Misc
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.log
 

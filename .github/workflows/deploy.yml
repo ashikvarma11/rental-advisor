@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/**'
+      - 'rental-advisor-frontend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rental-advisor-frontend/package-lock.json
+
+      - name: Install deps
+        working-directory: rental-advisor-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: rental-advisor-frontend
+        run: npm run build -- --configuration production --base-href /rental-advisor/
+
+      - name: SPA fallback for GitHub Pages
+        run: cp rental-advisor-frontend/dist/rental-advisor-frontend/browser/index.html rental-advisor-frontend/dist/rental-advisor-frontend/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: rental-advisor-frontend/dist/rental-advisor-frontend/browser
+
+  deploy-frontend:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

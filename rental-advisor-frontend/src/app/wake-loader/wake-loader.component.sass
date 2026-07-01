@@ -1,0 +1,47 @@
+:host
+	position: fixed
+	inset: 0
+	z-index: 100
+	display: flex
+	background: var(--paper)
+
+.wake-screen
+	margin: auto
+	display: flex
+	flex-direction: column
+	align-items: center
+	gap: 18px
+	padding: 32px
+	text-align: center
+
+.wake-keys
+	display: flex
+	gap: 10px
+
+.wake-key
+	display: flex
+	align-items: center
+	justify-content: center
+	width: 44px
+	height: 44px
+	border-radius: 10px
+	border: 1px solid var(--line)
+	background: #fff
+	font-family: var(--font-display)
+	font-weight: 700
+	font-size: 1.1rem
+	color: var(--accent)
+	box-shadow: 0 6px 16px rgba(16, 19, 15, 0.08)
+
+.wake-title
+	font-family: var(--font-display)
+	font-size: 1.05rem
+	font-weight: 700
+	color: var(--ink)
+	margin: 0
+
+.wake-copy
+	max-width: 320px
+	font-size: 0.85rem
+	color: var(--muted)
+	margin: 0
