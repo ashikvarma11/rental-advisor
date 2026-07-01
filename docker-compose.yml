@@ -4,7 +4,6 @@ services:
     build: ./backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ABR__ApiKey=${ABR_API_KEY}
       - Groq__ApiKey=${GROQ_API_KEY}
     volumes:
       - dbdata:/app/Data

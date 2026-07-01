@@ -15,9 +15,6 @@ dotnet run
 
 The API listens on `http://localhost:5050` in local dev (see `Properties/launchSettings.json`).
 
-ABR API key
-- Set `ABR__ApiKey` as an environment variable for the backend (an ABR ABN Lookup GUID from https://abr.business.gov.au/Tools/WebServices). The `Enrich` endpoint calls the live ABR API when the key is configured. Do NOT store keys in the frontend.
-
 Groq API key (AI clause analysis)
 - Set `Groq__ApiKey` as an environment variable to enable LLM-based lease clause risk scoring (free tier, sign up at https://console.groq.com). Optionally set `Groq__Model` (defaults to `llama-3.3-70b-versatile`).
 - Without a key, `POST /api/leases/{id}/extract-clauses` falls back to the built-in keyword heuristic — no error, just lower-quality scoring.

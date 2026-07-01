@@ -21,7 +21,7 @@ cd backend
 dotnet restore
 dotnet run
 ```
-Listens on `http://localhost:5050`. See [backend/README.md](backend/README.md) for API keys (ABR, Groq) and seed endpoints.
+Listens on `http://localhost:5050`. See [backend/README.md](backend/README.md) for the Groq API key and seed endpoints.
 
 ### Frontend
 ```powershell
@@ -34,4 +34,4 @@ npm start
 ```powershell
 docker-compose up --build
 ```
-Set `ABR_API_KEY` and `GROQ_API_KEY` in your environment or an `.env` file before running.
+Set `GROQ_API_KEY` in your environment or an `.env` file before running.
