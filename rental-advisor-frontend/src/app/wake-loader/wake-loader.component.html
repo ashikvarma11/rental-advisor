@@ -1,6 +1,34 @@
 <div class="wake-screen">
   <svg class="sleeper" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="skyClip">
+        <rect x="160" y="10" width="66" height="86" rx="4" />
+      </clipPath>
+    </defs>
+
+    <!-- window -->
+    <g>
+      <rect class="sky" x="160" y="10" width="66" height="86" rx="4" />
+      <g clip-path="url(#skyClip)">
+        <circle class="sun" cx="193" cy="118" r="13" />
+      </g>
+      <g class="window-frame">
+        <rect x="160" y="10" width="66" height="86" rx="4" />
+        <line x1="193" y1="10" x2="193" y2="96" />
+        <line x1="160" y1="53" x2="226" y2="53" />
+      </g>
+    </g>
+
     <ellipse class="bed-shadow" cx="120" cy="178" rx="90" ry="10" />
+
+    <!-- bedside table + lamp -->
+    <g class="nightstand">
+      <rect class="table-leg" x="8" y="140" width="5" height="20" rx="2" />
+      <rect class="table-leg" x="29" y="140" width="5" height="20" rx="2" />
+      <rect class="table-top" x="2" y="130" width="38" height="12" rx="6" />
+      <rect class="lamp-stem" x="18" y="100" width="4" height="22" rx="2" />
+      <path class="lamp-shade" d="M6 100 Q21 78 36 100 Z" />
+    </g>
     <g class="zzz">
       <text x="150" y="55" class="z z1">Z</text>
       <text x="165" y="40" class="z z2">Z</text>
@@ -14,11 +42,13 @@
         <path class="arm arm-right" d="M105 128 Q130 132 140 148" stroke-linecap="round" />
         <path class="eye eye-left" d="M74 106 q6 -4 12 0" stroke-linecap="round" />
         <path class="eye eye-right" d="M92 106 q6 -4 12 0" stroke-linecap="round" />
+        <circle class="eye-open eye-open-left" cx="80" cy="104" r="3.5" />
+        <circle class="eye-open eye-open-right" cx="98" cy="104" r="3.5" />
         <path class="mouth" d="M80 122 q6 3 12 0" stroke-linecap="round" />
       </g>
     </g>
   </svg>
 
-  <p class="wake-title">{{ asleep() ? 'Waking up the server' : 'All set!' }}</p>
-  <p class="wake-copy">Free hosting naps after a few idle minutes — it's stretching now, back in a moment.</p>
+  <p class="wake-title">{{ asleep() ? 'Shh… sleeping' : 'Rise and shine!' }}</p>
+  <p class="wake-copy">He's fast asleep — hang tight till he wakes up.</p>
 </div>

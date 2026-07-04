@@ -33,12 +33,12 @@ export class WakeLoaderComponent implements AfterViewInit {
     this.sleepTl?.kill();
 
     const tl = gsap.timeline({ onComplete: () => this.done.emit() });
-    tl.to('.z1, .z2, .z3', { opacity: 0, duration: 0.2 })
-      .to('.eye-left, .eye-right', { scaleY: 2, duration: 0.3, ease: 'back.out(2)' }, '<')
-      .to('.torso-group', { y: -18, duration: 0.5, ease: 'back.out(1.5)' }, '<')
-      .to('.arm-left', { rotate: -35, duration: 0.4, ease: 'power2.out' }, '<')
-      .to('.arm-right', { rotate: 35, duration: 0.4, ease: 'power2.out' }, '<')
-      .to('.mouth', { scaleY: 1.6, duration: 0.3, ease: 'power2.out' }, '<0.1')
+    tl.to('.sun', { cy: 44, duration: 1.6, ease: 'power2.out' }, 0)
+      .to('.sky', { fill: '#a3d5ff', duration: 1.6, ease: 'power2.out' }, 0)
+      .to('.z1, .z2, .z3', { opacity: 0, duration: 0.2 }, 0.1)
+      .to('.eye-left, .eye-right', { scaleY: 1.2, duration: 0.3, ease: 'power1.out' }, '<')
+      .to('.eye-left, .eye-right', { opacity: 0, duration: 0.15 }, '<0.15')
+      .to('.eye-open-left, .eye-open-right', { opacity: 1, duration: 0.15 }, '<')
       .to('.wake-screen', { opacity: 0, duration: 0.4, ease: 'power1.in' }, '+=0.5');
   }
 }

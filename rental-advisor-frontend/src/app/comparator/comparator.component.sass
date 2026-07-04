@@ -87,9 +87,29 @@
 	&.listing
 		background: var(--accent)
 
+.stat-row
+	display: flex
+	gap: 32px
+	margin-bottom: 20px
+
+.stat
+	display: flex
+	flex-direction: column
+	gap: 4px
+	font-size: 0.82rem
+	color: var(--muted)
+
+	strong
+		color: var(--ink)
+		font-family: var(--font-display)
+		font-size: 1.05rem
+
 .result-footnote
 	font-size: 0.82rem
 	margin-top: 8px
+
+	&.low-confidence
+		color: var(--accent)
 
 @media (max-width: 860px)
 	.compare-grid

@@ -8,7 +8,11 @@ interface CompareResult {
   postcode: string;
   median: number | null;
   averageListingRent: number | null;
+  minRent: number | null;
+  maxRent: number | null;
+  stdDeviation: number | null;
   listingCount: number;
+  isLowConfidence: boolean;
   differencePercent: number | null;
 }
 

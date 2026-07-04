@@ -181,7 +181,14 @@ public class GroqClauseAnalyzer
     }
 
     // Pulls weekly/monthly rent, suburb and postcode out of the raw lease text so extracted leases can feed the comparator's Listings table.
+    // Retries once since this call often lands right after ExtractClausesAsync and hits the same rate limit.
     public async Task<LeaseSummary?> ExtractLeaseSummaryAsync(string documentText, CancellationToken ct = default)
+    {
+        return await ExtractLeaseSummaryAttemptAsync(documentText, ct)
+            ?? await ExtractLeaseSummaryAttemptAsync(documentText, ct);
+    }
+
+    private async Task<LeaseSummary?> ExtractLeaseSummaryAttemptAsync(string documentText, CancellationToken ct)
     {
         var apiKey = _config["Groq:ApiKey"];
         if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(documentText)) return null;

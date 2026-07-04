@@ -3,7 +3,7 @@
     <div class="compare-form">
       <div class="eyebrow">Rent comparator</div>
       <h1>How does this listing stack up?</h1>
-      <p>Enter a postcode to compare average listed rent against the ABS median.</p>
+      <p>Enter a postcode to compare a listing's rent against the median of tracked leases in that area.</p>
 
       <div class="field">
         <label for="postcode">Postcode</label>
@@ -31,7 +31,7 @@
 
           <div class="bar-row">
             <div class="bar-label">
-              <span>Postcode median</span>
+              <span>Median tracked rent</span>
               <strong>{{ result.median != null ? ('$' + result.median) : '—' }}</strong>
             </div>
             <div class="bar-track">
@@ -49,7 +49,22 @@
             </div>
           </div>
 
-          <p class="result-footnote">Based on {{ result.listingCount }} tracked listing{{ result.listingCount === 1 ? '' : 's' }} in this area.</p>
+          <div class="stat-row">
+            <div class="stat">
+              <span>Range</span>
+              <strong>{{ result.minRent != null ? ('$' + result.minRent + ' – $' + result.maxRent) : '—' }}</strong>
+            </div>
+            <div class="stat">
+              <span>Spread</span>
+              <strong>{{ result.stdDeviation != null ? ('±$' + (result.stdDeviation | number:'1.0-0')) : '—' }}</strong>
+            </div>
+          </div>
+
+          @if (result.isLowConfidence) {
+            <p class="result-footnote low-confidence">Based on only {{ result.listingCount }} tracked listing{{ result.listingCount === 1 ? '' : 's' }} — treat as indicative only.</p>
+          } @else {
+            <p class="result-footnote">Based on {{ result.listingCount }} tracked listings in this area.</p>
+          }
         </div>
       } @else if (!loading()) {
         <div class="card empty-panel">

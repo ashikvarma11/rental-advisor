@@ -1,5 +1,5 @@
 @if (showLoader()) {
-  <app-wake-loader [asleep]="wake.waking()" (done)="showLoader.set(false)" />
+  <app-wake-loader [asleep]="!wake.ready()" (done)="showLoader.set(false)" />
 }
 
 <header class="site-header">

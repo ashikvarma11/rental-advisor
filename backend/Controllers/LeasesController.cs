@@ -152,20 +152,23 @@ public class LeasesController : ControllerBase
             }
         }
 
-        if (_aiAnalyzer.IsConfigured)
+        var summary = _aiAnalyzer.IsConfigured ? await _aiAnalyzer.ExtractLeaseSummaryAsync(content) : null;
+        if (summary == null || summary.Rent is not > 0 || string.IsNullOrWhiteSpace(summary.Suburb) || string.IsNullOrWhiteSpace(summary.Postcode))
         {
-            var summary = await _aiAnalyzer.ExtractLeaseSummaryAsync(content);
-            if (summary != null && summary.Rent > 0 && !string.IsNullOrWhiteSpace(summary.Suburb)
-                && !string.IsNullOrWhiteSpace(summary.Postcode) && System.Text.RegularExpressions.Regex.IsMatch(summary.Postcode, "^\\d{4}$"))
+            // Groq unavailable/rate-limited: fall back to regex against the fixed-format CBS lease template.
+            summary = ExtractLeaseSummaryByRegex(content);
+        }
+
+        if (summary != null && summary.Rent > 0 && !string.IsNullOrWhiteSpace(summary.Suburb)
+            && !string.IsNullOrWhiteSpace(summary.Postcode) && System.Text.RegularExpressions.Regex.IsMatch(summary.Postcode, "^\\d{4}$"))
+        {
+            _db.Listings.Add(new Listing
             {
-                _db.Listings.Add(new Listing
-                {
-                    Title = $"Lease upload: {doc.FileName}",
-                    Suburb = summary.Suburb!,
-                    Postcode = summary.Postcode!,
-                    Rent = summary.Rent.Value
-                });
-            }
+                Title = $"Lease upload: {doc.FileName}",
+                Suburb = summary.Suburb!,
+                Postcode = summary.Postcode!,
+                Rent = summary.Rent.Value
+            });
         }
 
         await _db.SaveChangesAsync();
@@ -206,6 +209,24 @@ public class LeasesController : ControllerBase
             .Where(t => t.Length > 20)
             .Take(50)
             .ToList();
+    }
+
+    // Fallback for when Groq is unavailable: the CBS fixed-term lease template always has
+    // "Address of premises: <street>, <suburb> SA <postcode>" and "Weekly amount: $<rent>".
+    private static Services.LeaseSummary? ExtractLeaseSummaryByRegex(string content)
+    {
+        var addressMatch = System.Text.RegularExpressions.Regex.Match(content,
+            @"Address of premises:\s*.*?,\s*([A-Za-z .'-]+?)\s+[A-Z]{2,3}\s+(\d{4})");
+        var rentMatch = System.Text.RegularExpressions.Regex.Match(content,
+            @"Weekly amount:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)");
+
+        if (!addressMatch.Success || !rentMatch.Success) return null;
+
+        var suburb = addressMatch.Groups[1].Value.Trim();
+        var postcode = addressMatch.Groups[2].Value.Trim();
+        if (!decimal.TryParse(rentMatch.Groups[1].Value.Replace(",", ""), out var rent)) return null;
+
+        return new Services.LeaseSummary(rent, suburb, postcode);
     }
 
     private async Task<string?> ExtractTextFromFileAsync(string path)

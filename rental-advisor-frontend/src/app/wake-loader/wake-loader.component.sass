@@ -19,8 +19,29 @@
 	height: auto
 	overflow: visible
 
+.sky
+	fill: #2a2f4a
+
+.sun
+	fill: #ffd166
+
+.window-frame
+	stroke: var(--ink)
+	stroke-width: 3
+	fill: none
+
 .bed-shadow
 	fill: rgba(16, 19, 15, 0.08)
+
+.table-top, .table-leg
+	fill: var(--accent)
+	opacity: 0.85
+
+.lamp-stem
+	fill: var(--muted)
+
+.lamp-shade
+	fill: #ffd166
 
 .blanket
 	fill: var(--accent)
@@ -35,11 +56,20 @@
 	stroke-width: 2.5
 	transform-origin: center
 
+.eye-open
+	fill: var(--ink)
+	opacity: 0
+
 .arm
 	fill: none
 	stroke: #ffd9b8
 	stroke-width: 10
-	transform-origin: center
+
+.arm-left
+	transform-origin: 65px 128px
+
+.arm-right
+	transform-origin: 105px 128px
 
 .z
 	font-family: var(--font-display)
