@@ -30,8 +30,4 @@ export class ApiService {
   resolveClause(clauseId: number) {
     return firstValueFrom(this.http.post(`${this.base}/api/clauses/${clauseId}/resolve`, {}));
   }
-
-  exportClauses(leaseId: number) {
-    return firstValueFrom(this.http.get(`${this.base}/api/leases/${leaseId}/clauses/export`, { responseType: 'text' }));
-  }
 }

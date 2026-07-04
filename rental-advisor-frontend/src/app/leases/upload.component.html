@@ -35,3 +35,85 @@
     }
   </div>
 </section>
+
+@if (leaseId) {
+<section class="section clauses-page">
+  <div class="container">
+    <div class="clauses-header">
+      <div>
+        <div class="eyebrow">Lease clauses</div>
+        <h1 #resultsTitle>Flagged for your review</h1>
+      </div>
+      <div class="clauses-actions">
+        <button class="btn btn-primary" (click)="exportPdf()" [disabled]="!clauses().length">Export PDF</button>
+      </div>
+    </div>
+
+    @if (message()) {
+      <p class="status-text">{{ message() }}</p>
+    }
+
+    @if (clauses().length) {
+      <div class="dashboard" #dashboard>
+        <div class="stat-tile clickable" [class.active]="filter() === 'all'" (click)="toggleFilter('all')">
+          <span class="stat-value" [attr.data-count]="total()">0</span>
+          <span class="stat-label">Total clauses</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" [attr.data-count]="avgRisk()" data-suffix="%">0</span>
+          <span class="stat-label">Average risk</span>
+        </div>
+        <div class="stat-tile clickable" [class.active]="filter() === 'high'" (click)="toggleFilter('high')">
+          <span class="stat-value" [attr.data-count]="counts().high">0</span>
+          <span class="stat-label">High risk</span>
+        </div>
+        <div class="stat-tile clickable" [class.active]="filter() === 'resolved'" (click)="toggleFilter('resolved')">
+          <span class="stat-value" [attr.data-count]="resolved()">0</span>
+          <span class="stat-label">Resolved</span>
+        </div>
+
+        <div class="stat-tile donut-tile">
+          <svg class="donut" viewBox="0 0 120 120">
+            <circle class="donut-track" cx="60" cy="60" r="54" />
+            <circle class="donut-seg seg-high" cx="60" cy="60" r="54"
+              [attr.data-len]="dashOffsets().high" transform="rotate(-90 60 60)" />
+            <circle class="donut-seg seg-med" cx="60" cy="60" r="54"
+              [attr.data-len]="dashOffsets().med" [attr.stroke-dashoffset]="dashOffsets().medOffset" transform="rotate(-90 60 60)" />
+            <circle class="donut-seg seg-low" cx="60" cy="60" r="54"
+              [attr.data-len]="dashOffsets().low" [attr.stroke-dashoffset]="dashOffsets().lowOffset" transform="rotate(-90 60 60)" />
+          </svg>
+          <div class="donut-legend">
+            <span class="legend-item clickable" [class.active]="filter() === 'high'" (click)="toggleFilter('high')"><i class="dot dot-high"></i>High {{ counts().high }}</span>
+            <span class="legend-item clickable" [class.active]="filter() === 'med'" (click)="toggleFilter('med')"><i class="dot dot-med"></i>Medium {{ counts().med }}</span>
+            <span class="legend-item clickable" [class.active]="filter() === 'low'" (click)="toggleFilter('low')"><i class="dot dot-low"></i>Low {{ counts().low }}</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (filter() !== 'all' && clauses().length) {
+      <p class="status-text filter-hint">Showing {{ filter() }} risk clauses only — <a (click)="toggleFilter(filter())">clear filter</a></p>
+    }
+
+    <div class="clause-list" #list>
+      @for (c of filteredClauses(); track c.id) {
+        <div class="card clause-card" [class.resolved]="c.isResolved">
+          <div class="clause-top">
+            <span class="badge" [class]="riskClass(c.riskScore)">{{ riskLabel(c.riskScore) }}</span>
+            <span class="risk-score">{{ (c.riskScore * 100) | number:'1.0-0' }}%</span>
+          </div>
+          <p class="clause-text">{{ c.text }}</p>
+          @if (c.suggestion) {
+            <p class="clause-suggestion">💡 {{ c.suggestion }}</p>
+          }
+          <div class="clause-footer">
+            <button class="btn btn-ghost btn-sm" (click)="resolveClause(c)" [disabled]="c.isResolved">
+              {{ c.isResolved ? 'Resolved' : 'Mark resolved' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+}

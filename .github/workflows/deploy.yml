@@ -19,13 +19,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Test
+        working-directory: backend/Backend.Tests
+        run: dotnet test
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rental-advisor-frontend/package-lock.json
+
+      - name: Install deps
+        working-directory: rental-advisor-frontend
+        run: npm ci
+
+      - name: Test
+        working-directory: rental-advisor-frontend
+        run: npm test
+
   deploy-backend:
+    needs: test-backend
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deploy
         run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
 
   build-frontend:
+    needs: test-frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

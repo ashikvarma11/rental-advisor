@@ -31,7 +31,7 @@ export class HomeComponent implements AfterViewInit {
       tag: '03',
       title: 'Review flagged clauses',
       copy: 'Every clause gets a risk score and plain-English guidance, powered by an LLM in the loop.',
-      link: '/clauses',
+      link: '/upload',
       cta: 'View clauses'
     }
   ];

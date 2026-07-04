@@ -11,4 +11,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.0" />
     <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Backend.Tests\**" />
+    <Content Remove="Backend.Tests\**" />
+    <EmbeddedResource Remove="Backend.Tests\**" />
+    <None Remove="Backend.Tests\**" />
+  </ItemGroup>
 </Project>
