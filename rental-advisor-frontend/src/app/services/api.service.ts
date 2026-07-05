@@ -13,6 +13,10 @@ export class ApiService {
     return firstValueFrom(this.http.get(`${this.base}/api/compare/suburb`, { params }));
   }
 
+  getLeases() {
+    return firstValueFrom(this.http.get(`${this.base}/api/leases`));
+  }
+
   uploadLease(file: File) {
     const fd = new FormData();
     fd.append('file', file, file.name);
@@ -25,6 +29,10 @@ export class ApiService {
 
   extractClauses(leaseId: number) {
     return firstValueFrom(this.http.post(`${this.base}/api/leases/${leaseId}/extract-clauses`, {}));
+  }
+
+  getExtractStatus(leaseId: number) {
+    return firstValueFrom(this.http.get(`${this.base}/api/leases/${leaseId}/extract-status`));
   }
 
   resolveClause(clauseId: number) {

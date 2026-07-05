@@ -1,0 +1,25 @@
+<section class="section auth-page">
+  <div class="container auth-form">
+    <div class="eyebrow">Get started</div>
+    <h1>Create an account</h1>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" [(ngModel)]="email" (keyup.enter)="submit()">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" [(ngModel)]="password" (keyup.enter)="submit()">
+    </div>
+
+    <button class="btn btn-primary" (click)="submit()" [disabled]="loading()">
+      {{ loading() ? 'Creating account…' : 'Register' }}
+    </button>
+
+    @if (error()) {
+      <p class="error-text">{{ error() }}</p>
+    }
+
+    <p class="auth-switch">Already have an account? <a routerLink="/login">Log in</a></p>
+  </div>
+</section>

@@ -27,7 +27,7 @@
     </label>
 
     <button class="btn btn-primary" (click)="upload()" [disabled]="!file() || loading()">
-      {{ loading() ? 'Uploading & analyzing…' : 'Upload & extract clauses' }}
+      {{ processing() ? 'Analyzing your lease…' : (loading() ? 'Uploading…' : 'Upload & extract clauses') }}
     </button>
 
     @if (error()) {

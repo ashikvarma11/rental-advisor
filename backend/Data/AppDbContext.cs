@@ -11,4 +11,10 @@ public class AppDbContext : DbContext
     public DbSet<SuburbStats> SuburbStats { get; set; } = null!;
     public DbSet<LeaseDocument> LeaseDocuments { get; set; } = null!;
     public DbSet<Clause> Clauses { get; set; } = null!;
+    public DbSet<User> Users { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+    }
 }

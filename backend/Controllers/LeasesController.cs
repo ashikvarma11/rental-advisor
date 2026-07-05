@@ -1,4 +1,7 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using RentalAdvisor.Backend.Data;
 using RentalAdvisor.Backend.Models;
@@ -10,22 +13,37 @@ namespace RentalAdvisor.Backend.Controllers;
 
 [ApiController]
 [Route("api/leases")]
+[Authorize]
 public class LeasesController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IWebHostEnvironment _env;
-    private readonly GroqClauseAnalyzer _aiAnalyzer;
     private readonly ILogger<LeasesController> _logger;
+    private readonly ClauseExtractionQueue _queue;
 
-    public LeasesController(AppDbContext db, IWebHostEnvironment env, GroqClauseAnalyzer aiAnalyzer, ILogger<LeasesController> logger)
+    public LeasesController(AppDbContext db, IWebHostEnvironment env, ILogger<LeasesController> logger, ClauseExtractionQueue queue)
     {
         _db = db;
         _env = env;
-        _aiAnalyzer = aiAnalyzer;
         _logger = logger;
+        _queue = queue;
+    }
+
+    private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpGet]
+    public async Task<IActionResult> GetLeases()
+    {
+        var leases = await _db.LeaseDocuments
+            .Where(d => d.UserId == UserId)
+            .OrderByDescending(d => d.Id)
+            .Select(d => new { d.Id, d.FileName, d.UploadedAt })
+            .ToListAsync();
+        return Ok(leases);
     }
 
     [HttpPost("upload")]
+    [EnableRateLimiting("user-or-ip")]
     public async Task<IActionResult> Upload([FromForm] IFormFile file)
     {
         if (file == null) return BadRequest(new { error = "file required" });
@@ -41,7 +59,7 @@ public class LeasesController : ControllerBase
 
         string? content = await ExtractTextFromFileAsync(savePath);
 
-        var doc = new LeaseDocument { FileName = Path.GetFileName(savePath), Content = content };
+        var doc = new LeaseDocument { UserId = UserId, FileName = Path.GetFileName(savePath), Content = content };
         _db.LeaseDocuments.Add(doc);
         await _db.SaveChangesAsync();
 
@@ -71,162 +89,29 @@ public class LeasesController : ControllerBase
 
         var content = await ExtractTextFromFileAsync(path);
 
-        var doc = new LeaseDocument { FileName = filename, Content = content };
+        var doc = new LeaseDocument { UserId = UserId, FileName = filename, Content = content };
         _db.LeaseDocuments.Add(doc);
         await _db.SaveChangesAsync();
         return Ok(new { id = doc.Id });
     }
 
     [HttpPost("{id}/extract-clauses")]
+    [EnableRateLimiting("user-or-ip")]
     public async Task<IActionResult> ExtractClauses(int id)
     {
-        var doc = await _db.LeaseDocuments.FindAsync(id);
-        if (doc == null) return NotFound();
+        var owned = await _db.LeaseDocuments.AnyAsync(d => d.Id == id && d.UserId == UserId);
+        if (!owned) return NotFound();
 
-        string? content = doc.Content;
-        if (string.IsNullOrEmpty(content))
-        {
-            var path = Path.Combine(_env.ContentRootPath, "Data", "leases", doc.FileName);
-            if (System.IO.File.Exists(path))
-                content = await ExtractTextFromFileAsync(path);
-        }
-
-        if (string.IsNullOrEmpty(content))
-            return BadRequest(new { error = "No text content available for clause extraction" });
-
-        // Prefer letting Groq split the raw text into clauses and score them in one pass -
-        // it handles messy PDF-extracted layout far better than a fixed regex/blank-line split.
-        var extracted = _aiAnalyzer.IsConfigured ? await _aiAnalyzer.ExtractClausesAsync(content) : null;
-
-        var created = 0;
-        if (extracted != null)
-        {
-            foreach (var e in extracted)
-            {
-                _db.Clauses.Add(new Clause
-                {
-                    LeaseDocumentId = doc.Id,
-                    Text = e.Text,
-                    RiskScore = e.RiskScore,
-                    Suggestion = e.Suggestion
-                });
-                created++;
-            }
-        }
-        else
-        {
-            var clauses = SplitIntoClauses(content);
-            var batch = _aiAnalyzer.IsConfigured ? await _aiAnalyzer.AnalyzeBatchAsync(clauses) : null;
-
-            for (var i = 0; i < clauses.Count; i++)
-            {
-                var c = clauses[i];
-                var analysis = batch?[i];
-
-                decimal score;
-                string? suggestion;
-                if (analysis != null)
-                {
-                    score = analysis.RiskScore;
-                    suggestion = analysis.Suggestion;
-                }
-                else
-                {
-                    score = 0m;
-                    var t = c.ToLowerInvariant();
-                    if (t.Contains("terminate") || t.Contains("breach") || t.Contains("penalty")) score += 0.6m;
-                    if (t.Contains("rent") || t.Contains("increase")) score += 0.2m;
-                    if (t.Contains("bond") || t.Contains("deposit")) score += 0.2m;
-                    score = Math.Min(1m, score);
-                    suggestion = score > 0.5m ? "Review with attention - possible high-risk clause." : null;
-                }
-
-                _db.Clauses.Add(new Clause
-                {
-                    LeaseDocumentId = doc.Id,
-                    Text = c,
-                    RiskScore = score,
-                    Suggestion = suggestion
-                });
-                created++;
-            }
-        }
-
-        var summary = _aiAnalyzer.IsConfigured ? await _aiAnalyzer.ExtractLeaseSummaryAsync(content) : null;
-        if (summary == null || summary.Rent is not > 0 || string.IsNullOrWhiteSpace(summary.Suburb) || string.IsNullOrWhiteSpace(summary.Postcode))
-        {
-            // Groq unavailable/rate-limited: fall back to regex against the fixed-format CBS lease template.
-            summary = ExtractLeaseSummaryByRegex(content);
-        }
-
-        if (summary != null && summary.Rent > 0 && !string.IsNullOrWhiteSpace(summary.Suburb)
-            && !string.IsNullOrWhiteSpace(summary.Postcode) && System.Text.RegularExpressions.Regex.IsMatch(summary.Postcode, "^\\d{4}$"))
-        {
-            _db.Listings.Add(new Listing
-            {
-                Title = $"Lease upload: {doc.FileName}",
-                Suburb = summary.Suburb!,
-                Postcode = summary.Postcode!,
-                Rent = summary.Rent.Value
-            });
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new { created });
+        _queue.Enqueue(new ClauseExtractionJob(id, UserId));
+        return Accepted(new { status = "queued" });
     }
 
-    // PdfPig's page.Text has no blank-line paragraph breaks, so splitting on "\n\n" collapses
-    // the whole document into one clause. Split on numbered clause headings (e.g. "12. Termination...")
-    // instead, since that's the actual structural unit in these lease documents; fall back to
-    // blank-line/line splitting for documents that aren't numbered.
-    private static readonly System.Text.RegularExpressions.Regex NumberedClauseHeading =
-        new(@"(?m)^\s*(\d{1,2})\.\s+\S", System.Text.RegularExpressions.RegexOptions.Compiled);
-
-    private static List<string> SplitIntoClauses(string content)
+    [HttpGet("{id}/extract-status")]
+    public IActionResult ExtractStatus(int id)
     {
-        var matches = NumberedClauseHeading.Matches(content).ToList();
-        if (matches.Count >= 3)
-        {
-            var parts = new List<string>();
-            for (var i = 0; i < matches.Count; i++)
-            {
-                var start = matches[i].Index;
-                var end = i + 1 < matches.Count ? matches[i + 1].Index : content.Length;
-                parts.Add(content.Substring(start, end - start).Trim());
-            }
-            return parts.Where(t => t.Length > 20).Take(50).ToList();
-        }
-
-        var byBlankLine = content.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.Trim())
-            .Where(t => t.Length > 20)
-            .ToList();
-        if (byBlankLine.Count > 1)
-            return byBlankLine.Take(50).ToList();
-
-        return content.Split('\n')
-            .Select(t => t.Trim())
-            .Where(t => t.Length > 20)
-            .Take(50)
-            .ToList();
-    }
-
-    // Fallback for when Groq is unavailable: the CBS fixed-term lease template always has
-    // "Address of premises: <street>, <suburb> SA <postcode>" and "Weekly amount: $<rent>".
-    private static Services.LeaseSummary? ExtractLeaseSummaryByRegex(string content)
-    {
-        var addressMatch = System.Text.RegularExpressions.Regex.Match(content,
-            @"Address of premises:\s*.*?,\s*([A-Za-z .'-]+?)\s+[A-Z]{2,3}\s+(\d{4})");
-        var rentMatch = System.Text.RegularExpressions.Regex.Match(content,
-            @"Weekly amount:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)");
-
-        if (!addressMatch.Success || !rentMatch.Success) return null;
-
-        var suburb = addressMatch.Groups[1].Value.Trim();
-        var postcode = addressMatch.Groups[2].Value.Trim();
-        if (!decimal.TryParse(rentMatch.Groups[1].Value.Replace(",", ""), out var rent)) return null;
-
-        return new Services.LeaseSummary(rent, suburb, postcode);
+        if (_queue.Statuses.TryGetValue(id, out var status))
+            return Ok(status);
+        return Ok(new JobStatusInfo(JobStatus.Unknown, null, null));
     }
 
     private async Task<string?> ExtractTextFromFileAsync(string path)
@@ -264,7 +149,7 @@ public class LeasesController : ControllerBase
     [HttpGet("{id}/debug-content")]
     public async Task<IActionResult> DebugContent(int id)
     {
-        var doc = await _db.LeaseDocuments.FindAsync(id);
+        var doc = await _db.LeaseDocuments.FirstOrDefaultAsync(d => d.Id == id && d.UserId == UserId);
         if (doc == null) return NotFound();
         return Ok(new { doc.FileName, length = doc.Content?.Length ?? 0, content = doc.Content });
     }
@@ -272,6 +157,8 @@ public class LeasesController : ControllerBase
     [HttpGet("{id}/clauses")]
     public async Task<IActionResult> GetClauses(int id)
     {
+        var owned = await _db.LeaseDocuments.AnyAsync(d => d.Id == id && d.UserId == UserId);
+        if (!owned) return NotFound();
         var clauses = await _db.Clauses.Where(c => c.LeaseDocumentId == id).ToListAsync();
         return Ok(clauses);
     }
@@ -279,6 +166,8 @@ public class LeasesController : ControllerBase
     [HttpGet("{id}/clauses/export")]
     public async Task<IActionResult> ExportClauses(int id)
     {
+        var owned = await _db.LeaseDocuments.AnyAsync(d => d.Id == id && d.UserId == UserId);
+        if (!owned) return NotFound();
         var clauses = await _db.Clauses.Where(c => c.LeaseDocumentId == id).ToListAsync();
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("Id,LeaseDocumentId,IsResolved,RiskScore,Suggestion,Text");

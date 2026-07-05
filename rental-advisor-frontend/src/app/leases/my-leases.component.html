@@ -1,0 +1,23 @@
+<section class="upload-page container">
+  <div class="upload-inner">
+    <h1>My Leases</h1>
+    <p>Leases you've uploaded previously. Click one to view its clause results.</p>
+
+    @if (loading()) {
+      <p>Loading...</p>
+    } @else if (error()) {
+      <p class="drop-sub">{{ error() }}</p>
+    } @else if (!leases().length) {
+      <p class="drop-sub">No leases uploaded yet.</p>
+    } @else {
+      <div class="lease-grid">
+        @for (lease of leases(); track lease.id) {
+          <button class="lease-card" (click)="open(lease)">
+            <span class="lease-name">{{ lease.fileName }}</span>
+            <span class="lease-date">{{ lease.uploadedAt | date:'medium' }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</section>

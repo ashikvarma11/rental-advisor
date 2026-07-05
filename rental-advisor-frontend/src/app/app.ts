@@ -3,6 +3,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import gsap from 'gsap';
 import { WakeService } from './services/wake.service';
 import { WakeLoaderComponent } from './wake-loader/wake-loader.component';
+import { AuthService } from './auth/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +13,7 @@ import { WakeLoaderComponent } from './wake-loader/wake-loader.component';
 })
 export class App {
   wake = inject(WakeService);
+  auth = inject(AuthService);
   showLoader = signal(!this.wake.ready());
 
   constructor() {

@@ -56,6 +56,14 @@ describe('ApiService', () => {
     expect(await promise).toEqual({ ok: true });
   });
 
+  it('getExtractStatus GETs the extraction status for a lease', async () => {
+    const promise = service.getExtractStatus(42);
+    const req = httpMock.expectOne(`${base}/api/leases/42/extract-status`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ status: 'Done', clausesCreated: 3 });
+    expect(await promise).toEqual({ status: 'Done', clausesCreated: 3 });
+  });
+
   it('resolveClause POSTs to resolve a clause', async () => {
     const promise = service.resolveClause(7);
     const req = httpMock.expectOne(`${base}/api/clauses/7/resolve`);

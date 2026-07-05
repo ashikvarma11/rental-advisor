@@ -5,12 +5,13 @@ import { ApiService } from '../services/api.service';
 describe('LeaseUploadComponent', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<LeaseUploadComponent>>;
   let component: LeaseUploadComponent;
-  let api: { uploadLease: ReturnType<typeof vi.fn>; extractClauses: ReturnType<typeof vi.fn>; getClauses: ReturnType<typeof vi.fn>; resolveClause: ReturnType<typeof vi.fn> };
+  let api: { uploadLease: ReturnType<typeof vi.fn>; extractClauses: ReturnType<typeof vi.fn>; getExtractStatus: ReturnType<typeof vi.fn>; getClauses: ReturnType<typeof vi.fn>; resolveClause: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     api = {
       uploadLease: vi.fn(),
       extractClauses: vi.fn(),
+      getExtractStatus: vi.fn(),
       getClauses: vi.fn(),
       resolveClause: vi.fn()
     };
@@ -36,20 +37,23 @@ describe('LeaseUploadComponent', () => {
     expect(component.leaseId).toBeUndefined();
   });
 
-  it('upload() loads clauses on success', async () => {
+  it('upload() polls extraction status and loads clauses once done', async () => {
     const file = new File(['x'], 'lease.pdf');
     component.file.set(file);
     api.uploadLease.mockResolvedValue({ id: 5 });
-    api.extractClauses.mockResolvedValue({});
+    api.extractClauses.mockResolvedValue({ status: 'queued' });
+    api.getExtractStatus.mockResolvedValue({ status: 'Done' });
     api.getClauses.mockResolvedValue([{ id: 1, text: 'c1', riskScore: 0.8, suggestion: null, isResolved: false }]);
 
     await component.upload();
 
     expect(api.uploadLease).toHaveBeenCalledWith(file);
     expect(api.extractClauses).toHaveBeenCalledWith(5);
+    expect(api.getExtractStatus).toHaveBeenCalledWith(5);
     expect(component.leaseId).toBe(5);
     expect(component.clauses().length).toBe(1);
     expect(component.loading()).toBe(false);
+    expect(component.processing()).toBe(false);
     expect(component.error()).toBeUndefined();
   });
 
@@ -62,6 +66,19 @@ describe('LeaseUploadComponent', () => {
     expect(component.error()).toBe('bad file');
     expect(component.loading()).toBe(false);
     expect(component.clauses()).toEqual([]);
+  });
+
+  it('upload() shows error when the extraction job fails', async () => {
+    component.file.set(new File(['x'], 'lease.pdf'));
+    api.uploadLease.mockResolvedValue({ id: 9 });
+    api.extractClauses.mockResolvedValue({ status: 'queued' });
+    api.getExtractStatus.mockResolvedValue({ status: 'Failed', error: 'No text content available' });
+
+    await component.upload();
+
+    expect(component.error()).toBe('No text content available');
+    expect(component.processing()).toBe(false);
+    expect(api.getClauses).not.toHaveBeenCalled();
   });
 
   it('upload() is a no-op when no file selected', async () => {

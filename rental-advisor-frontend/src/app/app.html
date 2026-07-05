@@ -8,6 +8,13 @@
     <nav>
       <a routerLink="/compare" routerLinkActive="active">Compare</a>
       <a routerLink="/upload" routerLinkActive="active">Upload Lease</a>
+      @if (auth.isLoggedIn()) {
+        <a routerLink="/my-leases" routerLinkActive="active">My Leases</a>
+        <a (click)="auth.logout()">Logout</a>
+      } @else {
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+      }
     </nav>
   </div>
 </header>

@@ -4,6 +4,7 @@ public class Clause
 {
     public int Id { get; set; }
     public int LeaseDocumentId { get; set; }
+    public LeaseDocument? LeaseDocument { get; set; }
     public string Text { get; set; } = string.Empty;
     public decimal RiskScore { get; set; }
     public string? Suggestion { get; set; }

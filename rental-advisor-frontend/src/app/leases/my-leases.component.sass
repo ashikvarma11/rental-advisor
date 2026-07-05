@@ -1,0 +1,52 @@
+:host
+	display: block
+
+.upload-page
+	padding-top: 64px
+
+.upload-inner
+	max-width: 720px
+
+	h1
+		font-size: clamp(1.8rem, 3vw, 2.4rem)
+		margin: 0 0 12px
+
+	p
+		margin-bottom: 32px
+
+.lease-grid
+	display: grid
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))
+	gap: 16px
+
+.lease-card
+	display: flex
+	flex-direction: column
+	align-items: flex-start
+	gap: 6px
+	padding: 16px
+	border: 1px solid var(--line)
+	border-radius: var(--radius)
+	background: #fff
+	cursor: pointer
+	text-align: left
+	font: inherit
+	width: 100%
+	min-width: 0
+	transition: border-color 0.2s ease, transform 0.15s ease
+
+	&:hover
+		border-color: var(--accent)
+		transform: translateY(-2px)
+
+.lease-name
+	font-family: var(--font-display)
+	font-size: 1rem
+	max-width: 100%
+	overflow: hidden
+	text-overflow: ellipsis
+	white-space: nowrap
+
+.lease-date
+	font-size: 0.8rem
+	color: var(--muted)

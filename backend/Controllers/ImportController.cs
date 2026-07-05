@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RentalAdvisor.Backend.Services;
 
 namespace RentalAdvisor.Backend.Controllers;
 
 [ApiController]
 [Route("api/import")]
+[Authorize]
 public class ImportController : ControllerBase
 {
     private readonly DataImporter _importer;
@@ -30,6 +33,7 @@ public class ImportController : ControllerBase
 
     [HttpPost("listings/upload")]
     [RequestSizeLimit(5 * 1024 * 1024)]
+    [EnableRateLimiting("user-or-ip")]
     public async Task<IActionResult> UploadListings(IFormFile file)
     {
         if (file == null || file.Length == 0)

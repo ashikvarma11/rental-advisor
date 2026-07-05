@@ -1,0 +1,25 @@
+<section class="section auth-page">
+  <div class="container auth-form">
+    <div class="eyebrow">Welcome back</div>
+    <h1>Log in</h1>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" [(ngModel)]="email" (keyup.enter)="submit()">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" [(ngModel)]="password" (keyup.enter)="submit()">
+    </div>
+
+    <button class="btn btn-primary" (click)="submit()" [disabled]="loading()">
+      {{ loading() ? 'Logging in…' : 'Log in' }}
+    </button>
+
+    @if (error()) {
+      <p class="error-text">{{ error() }}</p>
+    }
+
+    <p class="auth-switch">No account? <a routerLink="/register">Register</a></p>
+  </div>
+</section>

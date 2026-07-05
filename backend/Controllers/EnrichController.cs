@@ -1,11 +1,14 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace RentalAdvisor.Backend.Controllers;
 
 [ApiController]
 [Route("api/enrich/abn")]
+[Authorize]
 public class EnrichController : ControllerBase
 {
     private readonly IMemoryCache _cache;
@@ -22,6 +25,7 @@ public class EnrichController : ControllerBase
     }
 
     [HttpGet("{abn}")]
+    [EnableRateLimiting("external-api")]
     public async Task<ActionResult> Get(string abn)
     {
         var normalizedAbn = new string(abn.Where(char.IsDigit).ToArray());

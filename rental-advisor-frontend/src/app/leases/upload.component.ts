@@ -1,6 +1,7 @@
 import { Component, computed, ElementRef, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../services/api.service';
 import gsap from 'gsap';
 import jsPDF from 'jspdf';
@@ -33,6 +34,7 @@ export class LeaseUploadComponent {
   file = signal<File | undefined>(undefined);
   dragging = signal(false);
   loading = signal(false);
+  processing = signal(false);
   error = signal<string | undefined>(undefined);
 
   leaseId?: number;
@@ -80,7 +82,13 @@ export class LeaseUploadComponent {
     };
   });
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private route: ActivatedRoute) {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.leaseId = +id;
+      this.loadClauses();
+    }
+  }
 
   onDragOver(e: DragEvent) {
     e.preventDefault();
@@ -120,14 +128,34 @@ export class LeaseUploadComponent {
     try {
       const result: any = await this.api.uploadLease(file);
       if (result?.id) {
-        await this.api.extractClauses(result.id);
         this.leaseId = result.id;
-        await this.loadClauses();
+        await this.api.extractClauses(result.id);
+        await this.pollExtraction(result.id);
       }
     } catch (e: any) {
       this.error.set(e?.error?.error || e?.message || 'Upload failed');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private async pollExtraction(leaseId: number) {
+    this.processing.set(true);
+    try {
+      while (true) {
+        const status: any = await this.api.getExtractStatus(leaseId);
+        if (status?.status === 'Done') {
+          await this.loadClauses();
+          break;
+        }
+        if (status?.status === 'Failed') {
+          this.error.set(status?.error || 'Clause extraction failed');
+          break;
+        }
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    } finally {
+      this.processing.set(false);
     }
   }
 
