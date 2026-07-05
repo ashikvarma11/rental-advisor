@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { LeaseUploadComponent } from './upload.component';
 import { ApiService } from '../services/api.service';
 
@@ -17,7 +18,10 @@ describe('LeaseUploadComponent', () => {
     };
     TestBed.configureTestingModule({
       imports: [LeaseUploadComponent],
-      providers: [{ provide: ApiService, useValue: api }]
+      providers: [
+        { provide: ApiService, useValue: api },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}) } } }
+      ]
     });
     fixture = TestBed.createComponent(LeaseUploadComponent);
     component = fixture.componentInstance;
