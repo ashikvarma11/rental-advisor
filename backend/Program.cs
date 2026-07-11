@@ -95,6 +95,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler(a => a.Run(async ctx =>
+    {
+        ctx.Response.ContentType = "application/json";
+        ctx.Response.StatusCode = 500;
+        await ctx.Response.WriteAsJsonAsync(new { error = "Internal server error" });
+    }));
+}
 
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
